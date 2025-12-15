@@ -1,74 +1,55 @@
-class Towar:
-    def __init__(self, nazwa, cena, ilosc):
-        self.nazwa = nazwa
-        self.cena = cena
-        self.ilosc = ilosc
+import streamlit as st
 
-    def __str__(self):
-        return f"{self.nazwa} | Cena: {self.cena} PLN | Ilość: {self.ilosc}"
+# Magazyn - lista towarów (słowniki)
+magazyn = []
 
-class Magazyn:
-    def __init__(self):
-        self.towary = {}
+# Funkcja do dodawania towaru do magazynu
+def dodaj_towar(nazwa, cena, ilosc):
+    magazyn.append({'nazwa': nazwa, 'cena': cena, 'ilosc': ilosc})
 
-    def dodaj_towar(self, towar: Towar):
-        if towar.nazwa in self.towary:
-            self.towary[towar.nazwa].ilosc += towar.ilosc
-        else:
-            self.towary[towar.nazwa] = towar
+# Funkcja do usuwania towaru z magazynu
+def usun_towar(index):
+    if 0 <= index < len(magazyn):
+        magazyn.pop(index)
 
-    def usun_towar(self, nazwa, ilosc):
-        if nazwa in self.towary:
-            if self.towary[nazwa].ilosc >= ilosc:
-                self.towary[nazwa].ilosc -= ilosc
-                if self.towary[nazwa].ilosc == 0:
-                    del self.towary[nazwa]
-            else:
-                print(f"Nie ma wystarczającej ilości {nazwa} w magazynie!")
-        else:
-            print(f"Towar o nazwie {nazwa} nie istnieje w magazynie!")
+# Ustawienia strony
+st.set_page_config(page_title="Magazyn Towarów", page_icon="📦", layout="wide")
 
-    def wyswietl_magazyn(self):
-        if not self.towary:
-            print("Magazyn jest pusty!")
-        else:
-            for towar in self.towary.values():
-                print(towar)
+# Nagłówek aplikacji
+st.title("Prosty Program Magazynu Towarów")
 
-def menu():
-    magazyn = Magazyn()
+# Sekcja dodawania towaru
+st.header("Dodaj Nowy Towar")
 
-    while True:
-        print("\n--- MENU ---")
-        print("1. Dodaj towar")
-        print("2. Usuń towar")
-        print("3. Wyświetl magazyn")
-        print("4. Zakończ")
+nazwa = st.text_input("Nazwa towaru")
+cena = st.number_input("Cena towaru (PLN)", min_value=0.0, step=0.01)
+ilosc = st.number_input("Ilość towaru", min_value=1, step=1)
 
-        wybor = input("Wybierz opcję: ")
+if st.button("Dodaj Towar"):
+    if nazwa and cena > 0 and ilosc > 0:
+        dodaj_towar(nazwa, cena, ilosc)
+        st.success(f"Dodano towar: {nazwa}, Cena: {cena} PLN, Ilość: {ilosc}")
+    else:
+        st.error("Proszę uzupełnić wszystkie pola!")
 
-        if wybor == "1":
-            nazwa = input("Podaj nazwę towaru: ")
-            cena = float(input("Podaj cenę towaru: "))
-            ilosc = int(input("Podaj ilość towaru: "))
-            towar = Towar(nazwa, cena, ilosc)
-            magazyn.dodaj_towar(towar)
-            print(f"Dodano {towar.nazwa} do magazynu.")
+# Sekcja wyświetlania magazynu
+st.header("Stan Magazynu")
 
-        elif wybor == "2":
-            nazwa = input("Podaj nazwę towaru do usunięcia: ")
-            ilosc = int(input("Podaj ilość do usunięcia: "))
-            magazyn.usun_towar(nazwa, ilosc)
+if len(magazyn) > 0:
+    for i, towar in enumerate(magazyn):
+        st.write(f"{i+1}. **{towar['nazwa']}** | Cena: {towar['cena']} PLN | Ilość: {towar['ilosc']}")
+        if st.button(f"Usuń {towar['nazwa']}", key=f"usun_{i}"):
+            usun_towar(i)
+            st.experimental_rerun()  # Odświeżenie strony po usunięciu towaru
+else:
+    st.write("Brak towarów w magazynie.")
 
-        elif wybor == "3":
-            magazyn.wyswietl_magazyn()
+# Opcjonalnie sekcja do usuwania towaru po indeksie
+st.sidebar.header("Opcje")
+usun_index = st.sidebar.number_input("Wprowadź numer towaru do usunięcia (1-based index)", min_value=1, max_value=len(magazyn), step=1)
+if st.sidebar.button("Usuń Towar z Listy"):
+    usun_towar(usun_index - 1)
+    st.sidebar.success(f"Towar nr {usun_index} został usunięty.")
+    st.experimental_rerun()
 
-        elif wybor == "4":
-            print("Zakończono program.")
-            break
 
-        else:
-            print("Niepoprawny wybór, spróbuj ponownie.")
-
-if __name__ == "__main__":
-    menu()
